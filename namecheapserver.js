@@ -20,12 +20,12 @@ app.get('/server', (req, res) => {
 });
 app.post('/alert-hook-sell', (req, res) => {
     console.log(req.body);
-    res.send("Got it sell");
+    res.send(req.body);
     io.emit("chat message", "sell it")
 });
 app.post('/alert-hook-buy', (req, res) => {
     console.log(req.body);
-    res.send("Got it buy");
+    res.send(req.body);
     io.emit("chat message", "buy it")
 });
 

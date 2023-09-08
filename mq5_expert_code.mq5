@@ -7,6 +7,25 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
+#include <Trade\PositionInfo.mqh>
+#include <Trade\Trade.mqh>
+#include <Trade\SymbolInfo.mqh>
+#include <Trade\AccountInfo.mqh>
+#include <Trade\DealInfo.mqh>
+#include <Trade\OrderInfo.mqh>
+#include <Expert\Money\MoneyFixedMargin.mqh>
+
+CPositionInfo  m_position;                   // trade position object
+CTrade         m_trade;                      // trading object
+CSymbolInfo    m_symbol;                     // symbol info object
+CAccountInfo   m_account;                    // account info wrapper
+CDealInfo      m_deal;                       // deals object
+COrderInfo     m_order;                      // pending orders object
+CMoneyFixedMargin *m_money;
+
+CTrade trade;
+input double SL = 200.0; //Take Profit
+input double TP = 500.0; //Take Profit
 
 input string Address="127.0.0.1";
 input int    Port   =6000;
@@ -37,9 +56,14 @@ bool HTTPSend(int socket,string request)
   
 bool HTTPRecv(int socket,uint timeout)
   {
+      double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+      double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+      int CurrentSpread = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+
    char   rsp[];
    string result;
    uint   timeout_check=GetTickCount()+timeout;
+   string currencyName, tradeDirection;
 //--- read data from sockets till they are still present but not longer than timeout
    do
      {
@@ -58,6 +82,36 @@ bool HTTPRecv(int socket,uint timeout)
                //Print("found end");
                StringReplace(result, "--EOF", "");
                Print(result);
+               
+               string to_split = result; // A string to split into substrings 
+               string sep="-";                // A separator as a character 
+               ushort u_sep;                  // The code of the separator character 
+               string splitedResult[];               // An array to get strings 
+               //--- Get the separator code 
+               u_sep=StringGetCharacter(sep,0); 
+               //--- Split the string to substrings 
+               int k=StringSplit(to_split,u_sep, splitedResult); 
+               //--- Show a comment  
+               PrintFormat("Strings obtained: %d. Used separator '%s' with the code %d",k,sep,u_sep); 
+               //--- Now output all obtained strings 
+               if(k==4) 
+                 { 
+                  for(int i=0;i<k;i++) 
+                    { 
+                     PrintFormat("result[%d]=%s",i,splitedResult[i]); 
+                     
+                    } 
+                     currencyName = splitedResult[1];
+                     tradeDirection = splitedResult[2];
+                     Print(currencyName);
+                     Print(tradeDirection);
+                 }               
+
+               if (tradeDirection == "buy")
+                     trade.Buy(0.01, currencyName, Ask, Bid-SL*_Point, Ask+TP*_Point, NULL);
+               if (tradeDirection == "sell")
+                     trade.Sell(0.01, currencyName, Bid, Ask+SL*_Point, Bid-TP*_Point, NULL);
+               
                return true;
             }
            }

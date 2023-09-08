@@ -17,21 +17,28 @@ namecheap_socket.emit("command", "health-check")
 
 
 var net = require('net');
-let metatrader_socket = null;
+let metatrader_sockets = [];
 let EOF = "--EOF"; 
 var PORT = 6000;
 
 
 const send = (messsage) => {
-    if( metatrader_socket == null ) return -1;
-    messsage += EOF;
-    console.log("sending to metatrader: ", messsage);
-    metatrader_socket.write(messsage);
+    if( metatrader_sockets.length == 0 ) return -1;
+
+    metatrader_sockets.forEach( metatrader_socket => {
+        const s_messsage = messsage + EOF;
+        console.log("sending to metatrader: ", s_messsage);
+        metatrader_socket.write(s_messsage);
+    } )
 }
 
+//NimblePassword123+
 
 net.createServer(function (sock) {
     console.log('Connected to Metatrader: ' + sock.remoteAddress + ':' + sock.remotePort);
+
+    metatrader_sockets.push(sock);
+
     sock.on('data', function (data) {
         console.log('Health check message: ' + sock.remoteAddress + ': ' + data);
         try {
@@ -42,8 +49,6 @@ net.createServer(function (sock) {
     });
 
     // const timerId = setInterval( () => send("timer message"), 3000 );
-
-    metatrader_socket = sock;
 
     sock.on('close', function (data) {
         console.log('Connection to metatraer closed: ' + sock.remoteAddress + ' ' + sock.remotePort);
