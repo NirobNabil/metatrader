@@ -49,16 +49,17 @@ bool HTTPSend(int socket,string request)
   }
   
   
+  void trade(string currency, string command) {
+   Print(currency + " - " + command);
+  }
+  
   
 //+------------------------------------------------------------------+
 //| Read server response                                             |
 //+------------------------------------------------------------------+
-  
 bool HTTPRecv(int socket,uint timeout)
   {
-      double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
-      double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
-      int CurrentSpread = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+
 
    char   rsp[];
    string result;
@@ -78,39 +79,64 @@ bool HTTPRecv(int socket,uint timeout)
          if(rsp_len>0)
            {
             result+=CharArrayToString(rsp,0,rsp_len);
-            if( StringFind(result, "--EOF", 0) != -1 ) {
+            if( StringFind(result, "^", 0) != -1 ) {
                //Print("found end");
-               StringReplace(result, "--EOF", "");
+               //StringReplace(result, "--EOF", "");
                Print(result);
-               
-               string to_split = result; // A string to split into substrings 
-               string sep="-";                // A separator as a character 
-               ushort u_sep;                  // The code of the separator character 
-               string splitedResult[];               // An array to get strings 
-               //--- Get the separator code 
-               u_sep=StringGetCharacter(sep,0); 
-               //--- Split the string to substrings 
-               int k=StringSplit(to_split,u_sep, splitedResult); 
-               //--- Show a comment  
-               PrintFormat("Strings obtained: %d. Used separator '%s' with the code %d",k,sep,u_sep); 
-               //--- Now output all obtained strings 
-               if(k==4) 
-                 { 
-                  for(int i=0;i<k;i++) 
-                    { 
-                     PrintFormat("result[%d]=%s",i,splitedResult[i]); 
-                     
-                    } 
-                     currencyName = splitedResult[1];
-                     tradeDirection = splitedResult[2];
-                     Print(currencyName);
-                     Print(tradeDirection);
-                 }               
 
-               if (tradeDirection == "buy")
-                     trade.Buy(0.01, currencyName, Ask, Bid-SL*_Point, Ask+TP*_Point, NULL);
-               if (tradeDirection == "sell")
-                     trade.Sell(0.01, currencyName, Bid, Ask+SL*_Point, Bid-TP*_Point, NULL);
+               string m_to_split = result; // A string to split into substrings 
+               string m_sep="^";                // A separator as a character 
+               ushort m_u_sep;                  // The code of the separator character 
+               string m_splitedResult[];               // An array to get strings 
+               //--- Get the separator code 
+               m_u_sep=StringGetCharacter(m_sep,0); 
+               //--- Split the string to substrings 
+               int m_k=StringSplit(m_to_split,m_u_sep, m_splitedResult); 
+               //--- Show a comment  
+               //PrintFormat("Strings obtained: %d. Used separator '%s' with the code %d",k,sep,u_sep); 
+               
+               for( int i=0; i<m_k; i++ ) {
+                string to_split = m_splitedResult[i]; // A string to split into substrings 
+                string sep="-";                // A separator as a character 
+                ushort u_sep;                  // The code of the separator character 
+                string splitedResult[];               // An array to get strings 
+                //--- Get the separator code 
+                u_sep=StringGetCharacter(sep,0); 
+                //--- Split the string to substrings 
+                int k=StringSplit(to_split,u_sep, splitedResult); 
+                //--- Show a comment  
+                PrintFormat("Strings obtained: %d. Used separator '%s' with the code %d",k,sep,u_sep); 
+                //--- Now output all obtained strings 
+                if(k==4) 
+                  { 
+                    for(int i=0;i<k;i++) 
+                      { 
+                      PrintFormat("result[%d]=%s",i,splitedResult[i]); 
+                      
+                      } 
+                      currencyName = splitedResult[1];
+                      tradeDirection = splitedResult[2];
+                      
+                      trade(currencyName, tradeDirection);
+                      
+                      //double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
+                      //double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
+                      //int CurrentSpread = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);
+                      
+                      //if (tradeDirection == "buy") {
+                      //    Print("Buying");
+                      //    trade.Buy(0.01, currencyName, Ask, Bid-SL*_Point, Ask+TP*_Point, NULL);
+                      //}
+                      
+                      //if (tradeDirection == "sell") {
+                      //    Print("Selling");
+                      //    trade.Sell(0.01, currencyName, Bid, Ask+SL*_Point, Bid-TP*_Point, NULL);
+                      //}
+                    }               
+               }
+               
+
+               
                
                return true;
             }
