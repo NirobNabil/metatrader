@@ -8,7 +8,7 @@ const namecheap_socket = io("wss://mrptyltd.com");
 namecheap_socket.on("command", message => {
     console.log("Got message from namecheap: " + message);
     if( send(message) == -1 ) console.log("Couldn't forward command to metatrader");
-    else console.log("forwarded command to metatrader");
+    else console.log((new Date).toString() +  ": forwarded command to metatrader");
 })
 
 console.log("emitting");
@@ -18,7 +18,7 @@ namecheap_socket.emit("command", "health-check")
 
 var net = require('net');
 let metatrader_sockets = [];
-let EOF = "--EOF"; 
+let EOF = "^"; 
 var PORT = 6000;
 
 
